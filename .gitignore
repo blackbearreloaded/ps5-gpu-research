@@ -1,0 +1,22 @@
+# Generated evidence and build output
+build/
+results/
+captures/
+*.bin
+*.elf
+*.prx
+*.sprx
+*.qpa
+*.log
+
+# Local configuration and credentials
+.env
+.local/
+*.key
+*.pem
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
