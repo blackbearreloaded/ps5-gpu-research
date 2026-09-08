@@ -122,6 +122,21 @@ which can differ from the logical OpenGL mip dimensions. The proven fix uses
 ceiling division for physical linear mip extents while retaining the logical
 floor dimensions exposed through OpenGL.
 
+### Allocation policy follows resource lifetime
+
+The Yamagi game investigation found that persistent texture allocations could
+occupy the arena also used by frequent transient buffers. Buffer allocation then
+fell back to more expensive checked direct allocations. Keeping textures on the
+existing direct-allocation path preserved arena space for transient work without
+increasing the pool size. This was allocator-policy pressure, not a demonstrated
+exhaustion of the console's total GPU-visible memory.
+
+This is evidence from a game-specific graphics-runtime derivative, not a merged
+canonical SDK change or a general allocation-failure qualification. Stable mappings,
+bounds checks, fallback allocation and retirement ownership remain necessary.
+The transferable lesson is to distinguish resource residency, lifetime and
+allocation frequency before treating a larger pool as the solution.
+
 ## Resource descriptors
 
 Descriptors are treated as typed values, not opaque byte arrays. A descriptor
@@ -164,9 +179,35 @@ Findings:
 - A timeout, incorrect result, GPU fault, process failure, and kernel panic are
   different outcomes and must not be collapsed into one label.
 
-The current OpenGL backend waits for completion before returning from its
-native submission boundary. This is simple and correct for current tests, but
-it is not a proof of asynchronous multi-context scheduling.
+The OpenGL backend can defer eligible API work into bounded batches while still
+checking completion at its native submission boundary. Deferral is not proof of
+asynchronous multi-context scheduling. Referenced resources remain retained until
+their work retires; CPU access and incompatible operations drain pending work.
+
+### Batching and cache maintenance
+
+The graphics experiments extend the compute finding about submission granularity:
+many small draws can spend more time in CPU preparation, logging, visibility
+maintenance and completion waits than in useful GPU execution. Larger bounded
+batches improved the same 128-cube scene, while repeated depth-cache maintenance
+only became a meaningful throughput improvement after other bottlenecks changed.
+
+The measured cache optimizations rely on ownership, not on disabling synchronization:
+
+- repeated presentation-buffer maintenance can be reused within the same batch;
+- unused depth/stencil storage need not receive the work required for active tests;
+- required CPU-write/readback visibility and completion checks remain intact; and
+- reuse ends when the batch drains or the relevant resource backing changes.
+
+The game-derived texture optimization applies the same principle to eligible
+read-only linear fragment textures and lightmaps, within retained, unsubmitted
+work. It does not establish cross-frame cache reuse, tiled-texture reuse or a
+generic compute optimization. Its integration into the canonical SDK still needs
+affected resource-update and lifetime regressions.
+
+CPU-wall profiling includes waits and is not an isolated GPU timestamp. Removing
+per-draw success logging also produced a measured gain; diagnostic overhead must
+be separated from hardware throughput. See [controlled graphics benchmarks](benchmarks.md#graphics-benchmarks).
 
 ## Graphics path
 
@@ -175,12 +216,42 @@ derivation, and state normalization. The Gallium backend translates normalized
 state into native resources and commands.
 
 The presentation path keeps rendering and scanout resources explicit. Direct
-GPU rendering into alternating presentation buffers is proven. Offscreen
-resources can instead be read back into deterministic test receipts.
+GPU rendering into alternating presentation buffers is proven. A sampleable
+offscreen target follows a different storage path: the tested implementation
+performs CPU-side linear/tiled layout copies around rendering. These costs remain
+even when the offscreen texture is consumed by another GPU draw rather than read
+back only for a test oracle.
+
+Contiguous CPU copies improved the matched offscreen workload, but did not remove
+the full-surface transfers. The ~120 FPS windowed result therefore cannot be
+generalized to render-to-texture. Conversely, a slow fallback does not show that
+the GPU is physically incapable of a native path. A GPU-resident alternative
+remains implementation and validation work, not an established performance result.
 
 Video decode remains a separate subsystem. Decoded caller-owned surfaces can
 enter this graphics path as sampled textures, but shader execution does not
 perform the codec decode itself.
+
+### Full-port teardown and bounded stability
+
+Presentation buffers may still be owned by scanout after rendering has retired.
+The tested full-port shutdown drains rendering and pending presentation, restores
+the output mode, closes the owned presentation handle, and only then releases
+its resources. Removing a redundant buffer-unregister operation eliminated the
+previous busy warning on this close path. It does not prove that buffers can be
+unregistered while keeping the port open. On failed drain, restoration or close,
+resources must not be prematurely released.
+
+A ten-minute normal graphics session and five separate native launch/exit cycles
+extend the bounded evidence. Owned CPU-heap accounting stabilized during the
+session and returned to the same post-session level across recreation checks.
+It excludes direct GPU mappings, foreign allocators and process resident memory;
+flat samples do not prove the entire driver is leak-free. See
+[stability measurements](benchmarks.md#sustained-session-and-lifecycle).
+
+These additions summarize the September graphics record and the separately
+reviewed game handoff; their source boundaries are listed in
+[evidence identities](evidence.md#graphics-evidence-identities).
 
 ## Compute path
 

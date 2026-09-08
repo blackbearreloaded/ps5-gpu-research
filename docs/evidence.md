@@ -2,8 +2,9 @@
 
 ## Evidence method
 
-Every accepted hardware finding used a bounded native application and a
-declared oracle. The evidence chain records:
+Controlled GPU and CTS findings use a bounded native application and a declared
+oracle. Owner-reported interaction and sampled gameplay observations are labeled
+separately; they do not replace exact numerical checks. The evidence chain records:
 
 - source and dependency revisions;
 - deterministic build and artifact identity;
@@ -23,6 +24,8 @@ Raw captures and proprietary material remain outside this repository.
 | Hardware-proven | Exact frozen workload ran and matched its oracle |
 | Controlled | Hardware-proven under deterministic input, not necessarily sustained product use |
 | Source-derived | Supported by public/open-source code inspection but not direct console execution |
+| Host-checked | Compilation, linking, host tests or archive verification passed; no console execution is implied |
+| Owner-observed | Physical behavior reported by the owner; not a substitute for a complete numerical oracle or frame-time trace |
 | Inferred | Multiple observations support the conclusion; discriminator remains |
 | Pending | Implementation or required evidence is incomplete |
 | Unavailable through examined path | No usable route was found; no physical-hardware absence is inferred |
@@ -37,7 +40,15 @@ Raw captures and proprietary material remain outside this repository.
 | Mesa can derive OpenGL 3.3 Core and GLSL 3.30 | Hardware-proven | Current candidate and implemented Gallium caps/formats |
 | OpenGL 3.3 public command surface exists | Static and build-proven | All 344 Core commands link through the consumer SDK |
 | Major Core 3.3 feature families operate | Hardware-proven slices | Exact public-API tests listed in the OpenGL document |
-| Full OpenGL 3.3 conformance | Pending | Complete 39,544-execution immutable campaign not finished |
+| Historical frozen Core 3.3 project campaign | Controlled | 37,404 Pass plus 2,140 reviewed NotSupported across four configurations; six disclosed CTS adaptations |
+| Khronos certification | Not claimed | Project acceptance is not certification |
+| Later optimized SDK compatibility | Controlled sample | G7 SDK passes 204 selected executions; later binaries require their own scoped evidence |
+| Small-scene graphics throughput | Controlled | 30-second windowed runs at ~119.88 FPS at 1080p–4K; not a general game or perfect-pacing result |
+| 128-cube graphics throughput | Controlled | ~59.94 FPS ordinary and instanced at 1080p; small texture working set |
+| Offscreen-copy improvement | Controlled plus host-checked | Matched 1080p case 14.10 to 19.98 FPS, with pixels/completion/teardown and scalar-equivalence checks |
+| Bounded graphics stability | Controlled plus instrumented normal session | Ten-minute session and five native launch/exit cycles; CPU-owned heap only |
+| Yamagi gameplay | Owner-observed plus sampled timing | Separate runtime derivative; reported 60 FPS includes scene, sampling and texture-quality limits |
+| Fresh SDK distribution build | Host-checked | Clean CI compilation, 344 exports, three relocated links and archive checksums; no console qualification |
 | Quantized matrix operations match CPU references | Hardware-proven | Exact tested Q4/Q8 layouts and dimensions |
 | Complete transformer layers execute on GPU | Hardware-proven | Normalization, attention, projections, activation, residual, and logits |
 | Complete autoregressive models execute on GPU | Hardware-proven | Listed 135M through 9B-class profiles |
@@ -56,13 +67,43 @@ The OpenGL result is supported by:
 - exact buffer, texture, shader, draw, framebuffer, multisample, query,
   transform-feedback, and synchronization oracles;
 - direct presentation with changing frame hashes;
-- targeted official Khronos test passes;
+- a completed frozen four-configuration campaign with individually reviewed exclusions;
+- later optimized-candidate samples kept separate from that baseline;
+- installed-SDK ImGui, NanoVG and Sokol checks;
 - preserved functional failures that led to general fixes; and
 - clean bounded lifecycle receipts.
 
-The final gap is breadth, not a known missing high-level architecture: one
-unchanged executable must complete every official case in all four required
-configurations. New failures discovered there remain implementation work.
+The historical full campaign is complete within its declared scope. Its
+39,544 accounted results are not 39,544 passes and do not qualify every later
+compiler, runtime or application. The remaining work includes broader workload
+performance, resource/recovery stress and validation of subsequent changes.
+
+### Graphics evidence identities
+
+This September 8 update summarizes the separately controlled `ps5-opengl` source
+snapshot `bd1c77fdd1cbef65092525444dabc53196ea9746` and the reviewed `ps5-yamagi`
+handoff at `b711c4f90c4e5ec183af5aa31db8589586f0d69a`. References below are project
+and document identifiers, not private repository links or personal paths. Raw
+receipts and full artifact inventories remain with their respective projects.
+
+| Record | Identity and source document | Scope |
+| --- | --- | --- |
+| Historical full campaign | Runtime `0a15d8fa82f3f96cf071be927ad11422964a16ba`; `ps5-opengl` document `docs/validation.md` and export `validation/2026-09-07/` | Four complete configurations; 37,404 Pass and 2,140 reviewed NotSupported; 15 CTS cycles |
+| Graphics performance progression | G5d `610e6a3`, G6 `ec9ac2c`, G7 `cef6c1b`; `ps5-opengl` document `docs/performance.md` | Separately frozen high-refresh, close-path and 3D candidates; not one combined full-matrix result |
+| Optimized sampled SDK | G7 runtime `cef6c1b`; `ps5-opengl` document `docs/sdk-bundle.md` | 204/204 selected executions and independent consumer checks; preserves its own bytes |
+| Offscreen and sustained session | G9 `891dab7`, G10 instrumentation `725f6eb`; `ps5-opengl` document `docs/offscreen-stability.md` | Matched offscreen comparison, 600-second session, five launches/15 EGL sessions |
+| Game-derived findings | Reviewed `ps5-yamagi` document `docs/performance-handoff.md`; private G7 derivative | Allocation policy, scoped texture maintenance and bounded gameplay observations; not merged SDK acceptance |
+| Clean CI-built SDK | Source snapshot `bd1c77f`; `ps5-opengl` document `docs/ci-releases.md` and CI run `34183840335` | Build/link/package verification only; these binaries were not run on the console |
+
+The original CTS revision is `cf7edb26d3be2d8763595ed08fdc41f3c1b1966f`.
+Six disclosed changes cover platform build/package routing, portable I/O and a
+negative compute-shader version guard, with the platform overlay supplied
+separately. The exhaustive swizzle and LOD-bias workloads remain unchanged. Do
+not describe this runner as untouched upstream CTS or imply formal certification.
+
+The game case and all graphics hardware records above are scoped to the recorded
+firmware-6.02 console. Reusing a concept across graphics and compute does not
+transfer either project's correctness or performance acceptance to the other.
 
 ## Compute evidence summary
 
@@ -109,11 +150,33 @@ hardware result also requires separately controlled:
 No result should be reconstructed from prose alone and called an independent
 reproduction.
 
+### Source builds versus hardware-qualified binaries
+
+The September 8 CI run independently built the graphics SDK from the pinned public
+dependencies on a clean GitHub-hosted runner. Host regressions, compiler checks,
+all 344 Core exports, relocated Make/pkg-config/CMake consumer links and archive
+checksums passed. The distribution includes sources, licenses and provenance.
+This establishes a working source-to-SDK build path, not GPU execution, identical
+bytes across toolchain updates or reproduction of an older console campaign.
+
+Keep three identities distinct: source snapshot, compiled artifact and hardware
+receipt. A newly compiled SDK does not inherit older acceptance because its source
+is related. Likewise, the five-minute historical baseline, later high-refresh
+microbenchmarks and ten-minute normal session are not one unchanged executable.
+
+For the fresh CI archive, the recorded SDK manifest SHA-256 is
+`25b3d3112630f3f45248041f3530c77b746309f2310444d96c9276e4bd06e0a9`.
+It differs from the sampled hardware-tested SDK and is explicitly host-checked,
+not console-validated. No binaries or raw CI/console logs are copied here.
+
 ## Pending work
 
-1. Complete the official OpenGL 3.3 campaign on one immutable candidate.
-2. Run representative external OpenGL 3.3 renderers through the installed SDK.
-3. Characterize OpenGL performance only after correctness stabilizes.
+1. Validate changed graphics paths with affected exact-oracle tests and frozen
+   candidate identities; retain the historical complete matrix as a separate record.
+2. Reduce offscreen layout-copy costs and test heavier scenes without assuming
+   that windowed presentation throughput transfers to sampleable targets.
+3. Review and integrate game-derived allocation/cache candidates separately;
+   extend normal sessions, GPU-memory accounting and recovery testing.
 4. Expand compute correctness to additional model architectures without
    weakening exact reference checks.
 5. Add multi-process or concurrent-queue tests only with an explicit safety

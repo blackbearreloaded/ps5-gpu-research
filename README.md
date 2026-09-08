@@ -1,8 +1,12 @@
 # PS5 GPU Research
 
 Private, independent research into graphics and general-purpose GPU workloads
-on PlayStation 5. The project documents a Mesa-based OpenGL 3.3 Core candidate,
+on PlayStation 5. The project documents a Mesa-based OpenGL 3.3 Core implementation,
 a native compute path, and complete transformer inference executed on the GPU.
+
+Graphics and evidence summaries updated September 8, 2026. Compute results
+retain their previously recorded scope. OpenGL is a validation frontend for the
+graphics findings, not a requirement for using the underlying GPU concepts.
 
 This repository is deliberately separate from
 [PS5 Hardware Video Decoding Research](https://github.com/blackbearreloaded/ps5-hardware-video-decoding-research).
@@ -18,18 +22,22 @@ the GPU.
 | Primary validated firmware | PlayStation 5 firmware 6.02 |
 | Native shader execution | Graphics and compute programs execute with deterministic CPU-visible results |
 | Shader toolchain | Open-source GLSL/SPIR-V, Mesa NIR, and AMD compiler path adapted to the target GPU |
-| OpenGL | Mesa-derived OpenGL 3.3 Core and GLSL 3.30 candidate |
+| OpenGL | Mesa-derived OpenGL 3.3 Core and GLSL 3.30 implementation; not certified |
 | OpenGL API surface | All 344 OpenGL 3.3 Core commands exported and statically audited |
 | OpenGL hardware coverage | Major Core 3.3 feature families have exact public-API hardware oracles |
-| OpenGL conformance | Targeted Khronos cases pass; the complete four-configuration campaign is still in progress |
+| OpenGL validation | Historical frozen four-configuration campaign complete; later optimized binaries have separate, narrower evidence |
+| Graphics performance | Small windowed scene at ~119.88 FPS across 1080p, 1440p and 4K; 128-cube scene at ~59.94 FPS at 1080p |
+| Bounded graphics stability | Ten-minute ~59.90 FPS session and five native launch/exit cycles; not exhaustive recovery or memory validation |
 | General compute | Storage-buffer reads/writes, floating-point reductions, quantized projections, synchronization, and large dispatches proven |
 | Transformer inference | Complete 135M, 360M, 1.7B, 3B, 7B, and 9B-class model paths exercised on the GPU |
 | Application integration | Offline chat UI supports resident models, KV-cache reuse, streaming responses, and model switching |
 
-The OpenGL candidate is not described as Khronos-conformant. The pinned GL 3.3
-must-pass list contains 9,886 cases and four required configurations, or 39,544
-ordered executions. That final immutable-candidate campaign remains the
-completion gate.
+The historical September 7 campaign accounts for 9,886 cases across four
+configurations: **37,404 Pass + 2,140 individually reviewed NotSupported =
+39,544 accounted results**, not 39,544 passes. The runner has six disclosed
+adaptations. This is project acceptance, not Khronos certification. Later
+performance, game-derived and CI-built artifacts do not inherit that campaign.
+See [evidence identities and limits](docs/evidence.md#graphics-evidence-identities).
 
 ## Research highlights
 
@@ -42,6 +50,9 @@ completion gate.
 | Shader portability | Runtime GLSL and offline SPIR-V reach target GPU machine code through open-source compiler components |
 | Deterministic compute | GPU buffers, FP32 reductions, and quantized matrix projections match CPU reference results |
 | Submission granularity | Combining dependent model phases into one ordered GPU command sequence removed most tiny-submit overhead |
+| Graphics scheduling | Bounded batching, clear ordering and scoped cache maintenance substantially improve measured rendering without relaxing completion checks |
+| Storage-path cost | A matched 1080p offscreen case improved from 14.10 to 19.98 FPS through CPU copy optimization; fast presentation is not proof of fast render-to-texture |
+| Allocation lifetime | A game-derived candidate keeps persistent textures from displacing transient buffers; arena pressure is not equivalent to total GPU-memory exhaustion |
 | Memory residency | Packed model weights and KV caches remain in GPU-visible direct memory between turns |
 | Quantized inference | Q4/Q8 model layouts run directly; expanding small quantization scales during model preparation materially improved throughput |
 | Model correctness | Multiple model profiles reproduced reference token sequences; larger models also generated coherent multi-turn responses |
@@ -143,6 +154,9 @@ Evidence labels are intentionally narrow:
   used, but broad product behavior is not inferred.
 - **Source-derived:** behavior follows from open-source compiler or API code
   and has not necessarily been executed on the console.
+- **Host-checked:** a build, link or host test passed; this is not GPU execution.
+- **Owner-observed:** physical interaction was reported by the owner; its scope
+  is distinct from deterministic numerical acceptance.
 - **Inferred:** multiple observations support the conclusion, but a direct
   discriminator is still missing.
 - **Pending:** implementation or evidence is incomplete.
@@ -155,9 +169,10 @@ See [Evidence and limits](docs/evidence.md).
 
 ## Known limitations
 
-- The complete immutable OpenGL 3.3 CTS campaign is not finished.
-- OpenGL submission is deliberately serialized; asynchronous queue behavior
-  and shared contexts need separate validation.
+- The historical complete campaign is not a full-matrix result for later
+  optimized or CI-built binaries, and no Khronos certification is claimed.
+- Eligible OpenGL work uses bounded deferred batching; native completion remains
+  checked. Concurrent queues and shared contexts need separate validation.
 - Several compatibility paths use CPU fallback, including selected texture
   decompression, blits, and resolves.
 - OpenGL compatibility-profile fixed-function behavior is outside the current
@@ -165,6 +180,10 @@ See [Evidence and limits](docs/evidence.md).
 - Compute kernels are model-specific rather than a general ML compiler.
 - Performance figures describe exact controlled workloads, not universal GPU
   throughput.
+- Offscreen CPU layout copies remain a bottleneck. Ten-minute sessions and
+  bounded recreation do not establish multi-hour, GPU-memory, suspend/resume or
+  device-loss stability. Game-derived allocator/cache changes remain separate
+  from the canonical graphics SDK at the reviewed source snapshot.
 - Most current claims are firmware-6.02 claims. Selected earlier graphics
   primitives were also exercised elsewhere, but full-stack firmware parity is
   not claimed.

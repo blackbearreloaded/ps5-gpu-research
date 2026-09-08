@@ -13,6 +13,11 @@ hardware specifications. Every comparison must preserve:
 - timing start/end boundaries; and
 - correctness oracle.
 
+For graphics, also preserve scene content, render-target usage, resolution,
+sample count, texture quality, warm-up, pacing policy and runtime identity.
+Distinguish render dimensions from reported output dimensions and completed-frame
+throughput from output refresh rate or isolated GPU execution time.
+
 Short shader timings can be dominated by queue startup and polling resolution.
 Values labeled lower bounds include those costs and should not be compared to
 vendor peak specifications.
@@ -67,16 +72,105 @@ The 7B final-order loader is roughly 34x faster than the original per-tensor
 loading route in the same investigation. Later turns reuse resident data and
 report zero model reload time.
 
-## OpenGL observations
+## Graphics benchmarks
 
-OpenGL development has prioritized correctness rather than throughput. One
-controlled Core 3.3 animation alternated two presentation buffers and observed
-approximately 4-7 ms GPU retirement for its exact workload. This is sufficient
-to prove direct presentation and changing GPU output, but not to characterize
-driver or game performance.
+These September 7 results use OpenGL as the workload frontend on one firmware-6.02
+console. They are controlled performance findings for later optimized candidates,
+not a new full CTS campaign. Source identities and report names are in
+[the evidence record](evidence.md#graphics-evidence-identities).
 
-No aggregate OpenGL benchmark is published until the immutable CTS campaign
-and representative consumer-application tests complete.
+### Small windowed scene
+
+The same ImGui scene ran for 30 measured seconds after 30 warm-up frames at each
+render size. Each run completed 3,597 measured frames, passed both warm-up pixel
+probes, and retained checked draw completion, presentation and teardown.
+
+| Render size | Completed FPS | p95 / p99 frame interval (ms) |
+| --- | ---: | ---: |
+| 1920x1080 | 119.883028 | 9.262385 / 9.338802 |
+| 2560x1440 | 119.881864 | 8.874127 / 8.985345 |
+| 3840x2160 | 119.882543 | 9.014852 / 9.283553 |
+
+The matched 4K diagnostic baseline measured 59.942610 FPS. Reusing presentation
+cache maintenance within a batch raised it to 70.089393 FPS; avoiding unnecessary
+depth/stencil maintenance while those tests were disabled reached 119.882543 FPS.
+The scene and GPU commands were unchanged, and completion checks were not weakened.
+Both output status APIs reported 119.88 Hz and 3840x2160 output extents, then
+restoration to 59.94 Hz. This is not independent HDMI timing or a fresh physical
+TV/controller observation. Average 120-class throughput is not perfect pacing,
+and the later candidate has not requalified the earlier matrix's 4K90 case.
+
+### Textured 3D and submission cost
+
+The 128-cube workload uses two small textures at 1080p, with 30 measured seconds
+per draw mode. Its final candidate reaches 59.941451 FPS for ordinary draws and
+59.940062 FPS for instanced draws, each completing 1,799 measured frames. All
+2,052 pixel probes across the two runs pass, together with exact completion
+accounting and clean teardown. Ordinary-frame p99 is 17.62 ms.
+
+| Controlled change | Ordinary-draw FPS before / after | Interpretation |
+| --- | ---: | --- |
+| Routine per-draw success traces made opt-in | 4.57 / 11.99 | Unbuffered diagnostic I/O was a substantial CPU cost; error and lifecycle checks remained |
+| Batch-local depth maintenance reuse at the 128-entry stage | 14.98 / 29.97 | The same idea had negligible benefit with smaller batches; bottlenecks interact |
+| Batch capacity 128 to 256 | 29.97 / 59.94 | The scene's clear and 128 draws can retire together without weakening hazard checks |
+
+These are successive matched comparisons, not interchangeable binaries. Earlier
+mixed-clear ordering separately improved the instanced case from 29.97 to 59.94
+FPS. The result does not characterize heavy shaders, large texture working sets
+or sustained performance at larger object counts.
+
+### Sampleable offscreen targets
+
+The same 1080p ImGui offscreen workload, with two retired draws per frame, remains
+limited by CPU layout copies. A matched 30-second comparison gives:
+
+| Runtime | Completed FPS | Frames / elapsed seconds | Mean / p95 / p99 render time (ms) |
+| --- | ---: | ---: | ---: |
+| Published-SDK control | 14.095217 | 423 / 30.010180 | 70.942 / 83.484 / 85.288 |
+| Contiguous-copy candidate | 19.981406 | 600 / 30.027917 | 50.042 / 51.066 / 51.472 |
+
+The gain is approximately 41.8%, with pixel probes, completion and teardown
+passing. Host sanitizer checks compare the actual copy helper against scalar
+results across formats, tails, mip levels and layers. This optimizes CPU work;
+it neither removes the transfers nor achieves 60 FPS. Do not compare it to the
+windowed row as if render-target storage and timing boundaries were identical,
+or interpret the fallback's rate as the GPU's native render-to-texture ceiling.
+
+### Sustained session and lifecycle
+
+A later 1080p normal TV-demo session completed 35,942 frames and 21 pixel checks
+over 600 seconds, averaging about 59.90 FPS. Thirty-second windows ranged from
+59.87 to 59.93 FPS. It recorded 112 widget changes, so it was not an unchanged-input
+performance comparison.
+
+Owned heap use increased by 448 bytes/two blocks by 90 seconds, then stayed flat
+through the last steady sample at 570 seconds. Five separate native launch/exit
+cycles completed 15 EGL sessions and 90 checked frames; post-session owned heap
+was 9,375 bytes/21 blocks every time, without allocation failures or ambiguous
+zero-size reallocation accounting. All cycles closed cleanly.
+
+This covers the instrumented CPU allocator, not GPU direct mappings, foreign
+allocators or process resident memory. It does not establish multi-hour stability,
+absence of every leak, deliberate memory exhaustion, suspend/resume or device-loss
+recovery. Earlier focused full-port teardown tests removed the redundant
+buffer-unregister busy warning while preserving close and restoration checks.
+
+### Real-application corroboration: Yamagi
+
+The separately reviewed Yamagi port combines game renderer changes with a private
+graphics-runtime derivative. The owner reported stable 60 FPS while moving and
+firing. Its final capture contains 66 timing samples taken every 60 frames:
+median 16.735 ms, sampled p95 33.499 ms. Heavier entity scenes still reached
+approximately 33 ms; these are not all-frame statistics or a universal 60 FPS
+guarantee.
+
+The two reusable runtime findings were allocation policy by resource lifetime
+and reuse of unchanged texture maintenance within a retained batch. The latter
+reduced the world pass from approximately 10–12 ms to 2–3 ms in the compared
+captures. These changes were not merged into the canonical SDK at the reviewed
+snapshot. The game also uses material batching, streaming changes, particle quads
+and single-level textures; the texture choice can cause distant shimmer. The
+overall game result is not an isolated SDK comparison or a new conformance result.
 
 ## Interpretation limits
 
@@ -86,4 +180,8 @@ and representative consumer-application tests complete.
 - Do not compare model sizes without matching architecture, context, output
   length, quantization, and cache state.
 - Do not treat one-frame OpenGL timing as a sustained frame-rate result.
+- Do not equate average FPS with perfect pacing or compare unlike presentation
+  and sampleable-offscreen workloads as a single GPU-speed metric.
+- Do not combine the acceptance of different runtime binaries or infer that
+  host-only CI checks execute graphics on a console.
 - Do not infer another firmware's performance.

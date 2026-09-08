@@ -7,10 +7,15 @@ reports GLSL 3.30. It does not force either version through an override. Mesa's
 ordinary cumulative feature predicates determine the result from the Gallium
 screen capabilities and supported formats.
 
-All 344 OpenGL 3.3 Core commands are present in the public link surface. Major
-feature families have exact hardware tests, and selected official Khronos
-cases pass. The complete four-configuration must-pass campaign is pending, so
-this remains a conformance candidate rather than a conformance claim.
+All 344 OpenGL 3.3 Core commands are present in the public link surface. The
+historical frozen four-configuration campaign completed on September 7, 2026,
+with 37,404 Pass and 2,140 individually reviewed NotSupported results. This is
+project acceptance, not Khronos certification. Later optimized runtimes have
+separate focused evidence and do not inherit the full campaign.
+
+OpenGL provides a standards-facing validation workload for the broader GPU
+findings: shader translation, resource layout, synchronization, presentation and
+performance. It is not required for the independent compute frontend.
 
 ## Stack
 
@@ -129,8 +134,18 @@ A controlled OpenGL animation produced changing GPU frame hashes, alternated
 the two scanout slots, retired GPU work in approximately 4-7 ms in that exact
 workload, and exited cleanly.
 
-This is a correctness and integration result. It is not a general frame-rate
-benchmark.
+That early observation was a correctness result, not a sustained benchmark.
+Later controlled candidates reach ~119.88 FPS in the small windowed ImGui scene
+at 1080p, 1440p and 4K, and ~59.94 FPS in a 128-cube 1080p scene. Sampleable
+offscreen targets remain substantially slower because of CPU layout copies.
+See [graphics benchmarks](benchmarks.md#graphics-benchmarks) for timing, workload,
+output-status and frame-pacing boundaries.
+
+The later full-port shutdown path drains owned work, restores output state and
+closes the presentation handle before releasing resources. It avoids a redundant
+unregister operation; this is not proof of unregister-while-open or device-loss
+recovery. Ten-minute session and repeated-launch evidence is separately scoped
+in the benchmark document.
 
 ## Khronos test status
 
@@ -152,21 +167,51 @@ Targeted tests have already exposed and validated fixes for:
 - depth/stencil copy and blit behavior; and
 - framebuffer and shader-language edge cases.
 
-The full campaign must use one immutable executable and unmodified CTS source.
-A reduced diagnostic loop or targeted passing case cannot replace an official
-case. Formal completion requires every expected case, ordered logs, accepted
-status, clean title teardown, and healthy post-run services.
+### Completed historical baseline
+
+The frozen campaign accounts for every listed case in all four configurations:
+
+| Result | Per configuration | Total |
+| --- | ---: | ---: |
+| Pass | 9,351 | 37,404 |
+| Individually reviewed NotSupported | 535 | 2,140 |
+| Accounted | 9,886 | 39,544 |
+
+No gaps, duplicates, required-case failures, warnings, waivers or incomplete
+results remain in the accepted set. The reviewed exclusions concern optional,
+newer or upstream-defined inapplicable combinations, not accepted omissions of
+mandatory Core 3.3 behavior. All 15 recorded CTS lifecycle cycles completed
+uneventfully. Final installed-SDK ImGui, NanoVG and Sokol checks also passed;
+they supplement the matrix rather than adding CTS cases.
+
+The runner uses upstream CTS revision
+`cf7edb26d3be2d8763595ed08fdc41f3c1b1966f` with **six disclosed adaptations** for
+build/package routing, portable I/O and a negative compute-shader version guard,
+plus the platform overlay. It is not an untouched upstream executable. Full
+swizzle and LOD-bias workloads were retained. Frozen source and artifact identity,
+ordered case accounting, exclusion review and clean lifecycle remain essential.
+
+### Later candidates
+
+The optimized G7 SDK passed 51 selected cases in each configuration: **204/204
+Pass**, with no exclusions, warnings or waivers. That focused campaign and its
+consumer checks do not replace the historical full matrix. Later G9/G10 changes
+have their own performance and lifecycle checks, not inherited full-CTS or G7
+binary acceptance. Game-derived runtimes and fresh CI binaries are separate again.
+See [evidence identities](evidence.md#graphics-evidence-identities).
 
 ## Current limits
 
-- Full Khronos GL 3.3 campaign completion is pending.
+- Khronos certification is not claimed; later binaries have not rerun the full
+  historical matrix.
 - The compatibility profile and fixed-function OpenGL are not targets.
-- Submission is serialized; asynchronous and shared-context behavior is not
-  broadly proven.
+- Eligible draws and clears use bounded deferred batches with checked native
+  completion; concurrent queues and shared-context behavior are not broadly proven.
 - Some transfer, decompression, and resolve paths prioritize correctness over
   performance.
 - Timer behavior is emulated with monotonic host time.
-- The driver is correctness-oriented and not performance-tuned.
+- Focused performance gains do not remove CPU fallbacks or establish arbitrary
+  application performance.
 - The present evidence is primarily firmware-specific.
 
 ## Claim boundary
