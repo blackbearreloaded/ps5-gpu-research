@@ -44,6 +44,8 @@ Raw captures and proprietary material remain outside this repository.
 | Khronos certification | Not claimed | Project acceptance is not certification |
 | Later optimized SDK compatibility | Controlled sample | G7 SDK passes 204 selected executions; later binaries require their own scoped evidence |
 | Small-scene graphics throughput | Controlled | 30-second windowed runs at ~119.88 FPS at 1080p–4K; not a general game or perfect-pacing result |
+| Native 1440p120 and 4K120 output | Controlled plus console HDMI evidence | September 8 unchanged apps, exact pixels and matching 119.88 Hz negotiation; independent per-run TV refresh observations remain separate |
+| SDL fixed high-resolution profiles | Controlled functional checks | 180 frames/two exact pixels per resolution, matching HDMI, normal-output restoration and clean teardown; not measured SDL FPS |
 | 128-cube graphics throughput | Controlled | ~59.94 FPS ordinary and instanced at 1080p; small texture working set |
 | Offscreen-copy improvement | Controlled plus host-checked | Matched 1080p case 14.10 to 19.98 FPS, with pixels/completion/teardown and scalar-equivalence checks |
 | Bounded graphics stability | Controlled plus instrumented normal session | Ten-minute session and five native launch/exit cycles; CPU-owned heap only |
@@ -94,6 +96,21 @@ receipts and full artifact inventories remain with their respective projects.
 | Offscreen and sustained session | G9 `891dab7`, G10 instrumentation `725f6eb`; `ps5-opengl` document `docs/offscreen-stability.md` | Matched offscreen comparison, 600-second session, five launches/15 EGL sessions |
 | Game-derived findings | Reviewed `ps5-yamagi` document `docs/performance-handoff.md`; private G7 derivative | Allocation policy, scoped texture maintenance and bounded gameplay observations; not merged SDK acceptance |
 | Clean CI-built SDK | Source snapshot `bd1c77f`; `ps5-opengl` document `docs/ci-releases.md` and CI run `34183840335` | Build/link/package verification only; these binaries were not run on the console |
+
+Later display follow-up: `ps5-opengl` source companion `b28f96c` records G37–G40
+in `docs/high-resolution-120-plan.md`. The frozen ImGui build source is
+`3cdc90b`; SDL profile integration is `ac2a52a`. Subsequent documentation commits
+are not rebuilds. The implementation's `docs/performance.md` publishes the exact
+SDK/runtime/executable SHA-256 identities. The same 4K executable's HDMI1/HDMI4
+comparison establishes a connection-path limitation for that setup; the native
+1440p result follows a separately owner-selected resolution. It does not qualify
+every TV input, cable, capture device, new SDK build or HDMI configuration.
+
+The owner confirmed 4K120 for a preceding stream on HDMI4 and 1440p resolution
+before its OpenGL test. Neither statement is recorded as independent TV refresh
+verification of every later OpenGL/SDL run. The four bounded applications have
+their own console negotiation, pixels, restoration, teardown and health evidence;
+none inherits the historical full CTS campaign or changes the compute results.
 
 The original CTS revision is `cf7edb26d3be2d8763595ed08fdc41f3c1b1966f`.
 Six disclosed changes cover platform build/package routing, portable I/O and a

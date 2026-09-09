@@ -27,6 +27,7 @@ the GPU.
 | OpenGL hardware coverage | Major Core 3.3 feature families have exact public-API hardware oracles |
 | OpenGL validation | Historical frozen four-configuration campaign complete; later optimized binaries have separate, narrower evidence |
 | Graphics performance | Small windowed scene at ~119.88 FPS across 1080p, 1440p and 4K; 128-cube scene at ~59.94 FPS at 1080p |
+| Physical display negotiation | Later frozen apps verify native 1440p and 4K HDMI at 119.88 Hz on the tested connection; rendering and sink observations remain separate |
 | Bounded graphics stability | Ten-minute ~59.90 FPS session and five native launch/exit cycles; not exhaustive recovery or memory validation |
 | General compute | Storage-buffer reads/writes, floating-point reductions, quantized projections, synchronization, and large dispatches proven |
 | Transformer inference | Complete 135M, 360M, 1.7B, 3B, 7B, and 9B-class model paths exercised on the GPU |
@@ -51,6 +52,7 @@ See [evidence identities and limits](docs/evidence.md#graphics-evidence-identiti
 | Deterministic compute | GPU buffers, FP32 reductions, and quantized matrix projections match CPU reference results |
 | Submission granularity | Combining dependent model phases into one ordered GPU command sequence removed most tiny-submit overhead |
 | Graphics scheduling | Bounded batching, clear ordering and scoped cache maintenance substantially improve measured rendering without relaxing completion checks |
+| Display-path limits | The same 4K app changed from 1080p120 to 4K120 after using a capable TV input; rendering dimensions and refresh-only overlays are not HDMI-resolution proof |
 | Storage-path cost | A matched 1080p offscreen case improved from 14.10 to 19.98 FPS through CPU copy optimization; fast presentation is not proof of fast render-to-texture |
 | Allocation lifetime | A game-derived candidate keeps persistent textures from displacing transient buffers; arena pressure is not equivalent to total GPU-memory exhaustion |
 | Memory residency | Packed model weights and KV caches remain in GPU-visible direct memory between turns |

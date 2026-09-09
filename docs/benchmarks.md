@@ -74,7 +74,8 @@ report zero model reload time.
 
 ## Graphics benchmarks
 
-These September 7 results use OpenGL as the workload frontend on one firmware-6.02
+The September 7 results and separately labeled September 8 follow-up use OpenGL
+as the workload frontend on one firmware-6.02
 console. They are controlled performance findings for later optimized candidates,
 not a new full CTS campaign. Source identities and report names are in
 [the evidence record](evidence.md#graphics-evidence-identities).
@@ -99,6 +100,41 @@ Both output status APIs reported 119.88 Hz and 3840x2160 output extents, then
 restoration to 59.94 Hz. This is not independent HDMI timing or a fresh physical
 TV/controller observation. Average 120-class throughput is not perfect pacing,
 and the later candidate has not requalified the earlier matrix's 4K90 case.
+
+### Native HDMI qualification (September 8 follow-up)
+
+Later frozen apps on the same firmware-6.02 console distinguish completed
+rendering from negotiated HDMI output. The tested display was a Hisense 55U78N
+using HDMI4. Both 30-second ImGui workloads completed 3,597 measured frames:
+
+| Render dimensions | Measured seconds | Completed FPS | Console-reported active HDMI |
+| --- | ---: | ---: | --- |
+| 2560x1440 | 30.004589 | 119.881660 | 2560x1440 at 119.88 Hz |
+| 3840x2160 | 30.004094 | 119.883639 | 3840x2160 at 119.88 Hz |
+
+Both pixel oracles passed. A separate standard-SDL consumer completed 180
+frames and two exact pixel checks at each size with matching HDMI timing.
+All four native cycles restored 59.94 Hz at their selected resolution, closed
+cleanly and passed environment-health checks. The SDL runs are functional
+checks, not SDL FPS measurements or additional long-session evidence.
+
+The useful controlled comparison is physical: the unchanged 4K executable
+negotiated 1080p120 on HDMI1, then 4K120 on HDMI4. No renderer rebuild or app
+metadata change was needed. The display's
+[official quick-start guide](https://assets.hisense-canada.com/assets/ProductDownloads/486/f1ae562e0c/QSG-English-55-65-75U78N.pdf)
+(printed page 5) identifies HDMI1/2 as 4K60 and HDMI3/4 as 4K144 inputs.
+Native 1440p additionally followed the owner's console output selection;
+1440p rendering alone did not establish a native 1440p signal.
+
+Three observations must remain distinct: framebuffer dimensions, completed
+application FPS, and the negotiated link/independent sink signal. A render-size
+HUD plus a TV game bar showing only 120 FPS is not proof of 4K input. Correlate
+resolution and refresh during the same workload; a menu or stale display banner
+can describe a different state. These findings concern presentation, not video
+decoding correctness or general compute throughput. They do not establish
+arbitrary-game FPS, perfect pacing, HDR pixel accuracy or another firmware.
+See the [OpenGL qualification record](https://github.com/blackbearreloaded/ps5-opengl/blob/b28f96c/docs/high-resolution-120-plan.md)
+for the separately identified runs; raw logs and executables are not copied here.
 
 ### Textured 3D and submission cost
 
