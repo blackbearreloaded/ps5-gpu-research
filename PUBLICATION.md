@@ -1,7 +1,7 @@
 # Publication policy
 
-This repository is currently private. Any future public release requires a
-fresh maintainer review of every tracked file and the repository history.
+This repository is public. Before publishing changes, review every tracked
+file and any new repository history against the boundaries below.
 
 ## Allowed material
 

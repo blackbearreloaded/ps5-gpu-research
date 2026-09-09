@@ -1,6 +1,6 @@
 # PS5 GPU Research
 
-Private, independent research into graphics and general-purpose GPU workloads
+Independent research into graphics and general-purpose GPU workloads
 on PlayStation 5. The project documents a Mesa-based OpenGL 3.3 Core implementation,
 a native compute path, and complete transformer inference executed on the GPU.
 
