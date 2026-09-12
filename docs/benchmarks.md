@@ -74,9 +74,10 @@ report zero model reload time.
 
 ## Graphics benchmarks
 
-The September 7 results and separately labeled September 8 follow-up use OpenGL
-as the workload frontend on one firmware-6.02
-console. They are controlled performance findings for later optimized candidates,
+The September 7 results and separately labeled September 8 and September 11–12
+follow-ups use OpenGL as the workload frontend on one firmware-6.02 console.
+Controlled measurements and owner observations are labeled separately below;
+they describe later optimized candidates,
 not a new full CTS campaign. Source identities and report names are in
 [the evidence record](evidence.md#graphics-evidence-identities).
 
@@ -193,8 +194,8 @@ buffer-unregister busy warning while preserving close and restoration checks.
 
 ### Real-application corroboration: Yamagi
 
-The separately reviewed Yamagi port combines game renderer changes with a private
-graphics-runtime derivative. The owner reported stable 60 FPS while moving and
+The initial Yamagi port combined game renderer changes with a then-private
+graphics-runtime derivative. The owner reported stable 60 FPS at 1080p while moving and
 firing. Its final capture contains 66 timing samples taken every 60 frames:
 median 16.735 ms, sampled p95 33.499 ms. Heavier entity scenes still reached
 approximately 33 ms; these are not all-frame statistics or a universal 60 FPS
@@ -207,6 +208,79 @@ captures. These changes were not merged into the canonical SDK at the reviewed
 snapshot. The game also uses material batching, streaming changes, particle quads
 and single-level textures; the texture choice can cause distant shimmer. The
 overall game result is not an isolated SDK comparison or a new conformance result.
+
+#### Public 120 Hz follow-up
+
+[Yamagi Quake II v0.2.0-alpha.1](https://github.com/blackbearreloaded/ps5-yamagi-quake2/releases/tag/v0.2.0-alpha.1)
+publishes the optimized game, frozen SDK, patched runtime sources and focused
+checks. The release uses PS5 OpenGL base `32ca4d4` plus game-specific changes.
+It supports 1920x1080, 2560x1440 and 3840x2160 render buffers at a 120 Hz target.
+Three distinct observations on the same firmware-6.02 console are preserved:
+
+- **Owner-observed gameplay:** the optimized 4K development candidate was
+  reported at 120 FPS throughout the tested areas, including the stationary
+  opening and underwater. This is bounded interaction, not an all-frame trace.
+- **Automated timing and lifecycle:** a separate 90-second opening-scene run
+  rendered 3,961 frames and completed six resolution switches. Seven native
+  video initializations succeeded, with the previous graphics owner closed
+  before each restart. The final configuration retained 2160p and a 120 FPS limit.
+- **Exact CI-download startup:** the independently built release folder had
+  all 77 files verified before a 15-second native menu check. The 4K menu
+  produced 12 steady 120-frame windows with median 119.880240 FPS, minimum
+  119.857849 and maximum 119.904316. Saved settings reloaded; close, runtime
+  release and service health passed. This was not a separate manual gameplay,
+  controller, audible-audio or physical HDMI qualification of the CI executable.
+
+The automated resolution run measured these steady 120-frame windows:
+
+| Render size | Windows | Minimum FPS | Median FPS | Maximum FPS |
+| --- | ---: | ---: | ---: | ---: |
+| 1920x1080 | 6 | 119.875928 | 119.880240 | 119.882276 |
+| 2560x1440 | 6 | 119.857130 | 119.888803 | 119.899764 |
+| 3840x2160 | 7 | 116.957468 | 118.872965 | 119.880958 |
+
+These rates exclude renderer-restart intervals. The 3,961-frame count covers the
+whole bounded run, including startup and switching; dividing it by 90 seconds
+measures that different boundary. Window minima and maxima are not individual
+frame-time percentiles. No new exact pixel oracle is claimed for this game run.
+
+The game combines GPU depth clears, world/brush/water batching, allocation and
+texture-maintenance reuse, presentation overlap and distinct command retirement.
+Transparent ordering and resource hazards remain constraints on batching.
+Single-level textures remain the default quality tradeoff. The final game result
+does not isolate each change's contribution, establish a general offscreen
+speedup, qualify other firmware or inherit the earlier full CTS campaign.
+See [architecture lessons](architecture.md#presentation-overlap-and-distinct-resource-lifetimes)
+and [artifact identities](evidence.md#yamagi-120-hz-release-identities).
+
+### Proposed game-derived benchmark matrix
+
+**Pending recommendation:** reuse the public game's bounded opening and
+resolution-cycle modes as starting points. Add fixed workloads for the
+remaining observations before treating game-runtime changes as general SDK wins.
+The table proposes experiments; it does not report newly completed benchmarks.
+
+| Workload | Question to discriminate |
+| --- | --- |
+| Stationary opening and a fixed quiet view | Is a 60 FPS plateau caused by CPU preparation, completion polling or presentation timing? |
+| Fixed busy view, then the same view after enemies are gone | Does scene geometry/material work dominate after simulation activity subsides? |
+| Fixed underwater view and a repeated water transition | Do active-target clears, water batching or offscreen transfers account for the cost? |
+| Identical scene at 1080p, 1440p and 2160p, plus sizes around fast-path thresholds | Does a smaller render size select a slower CPU fallback? |
+| Repeated resolution changes, close and relaunch | Are graphics caches invalidated, resources retired and the selected mode restored? |
+| Matched presentation and sampleable-offscreen microbenchmarks | Which costs come from render-target storage and layout conversion? |
+
+For each controlled comparison, freeze scene/camera, game data, texture quality,
+toolchain and SDK hashes. Change one runtime behavior, warm up consistently,
+and retain full frame intervals with p50/p95/p99 and missed 8.33 ms budgets.
+Separately record CPU preparation, allocation/cache work, completion waits and
+presentation waits. Use GPU timing only when its execution boundary is validated;
+do not relabel CPU wall time as GPU time. Compare instrumentation enabled and
+disabled so logging cost does not become the result.
+
+Retain the affected pixel/resource-update/lifetime oracles alongside performance
+checks, and rerun the frozen matrix after integrating the selected changes.
+Runtime integration belongs in [PS5 OpenGL](https://github.com/blackbearreloaded/ps5-opengl);
+this research repository records the observations, hypotheses and acceptance scope.
 
 ## Interpretation limits
 

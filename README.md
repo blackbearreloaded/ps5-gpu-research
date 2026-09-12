@@ -4,7 +4,7 @@ Independent research into graphics and general-purpose GPU workloads
 on PlayStation 5. The project documents a Mesa-based OpenGL 3.3 Core implementation,
 a native compute path, and complete transformer inference executed on the GPU.
 
-Graphics and evidence summaries updated September 8, 2026. Compute results
+Graphics and evidence summaries updated September 12, 2026 (UTC). Compute results
 retain their previously recorded scope. OpenGL is a validation frontend for the
 graphics findings, not a requirement for using the underlying GPU concepts.
 
@@ -27,6 +27,7 @@ the GPU.
 | OpenGL hardware coverage | Major Core 3.3 feature families have exact public-API hardware oracles |
 | OpenGL validation | Historical frozen four-configuration campaign complete; later optimized binaries have separate, narrower evidence |
 | Graphics performance | Small windowed scene at ~119.88 FPS across 1080p, 1440p and 4K; 128-cube scene at ~59.94 FPS at 1080p |
+| Real-game follow-up | Yamagi 4K gameplay at owner-reported 120 FPS in tested areas; separate three-resolution timing and exact CI-download startup checks |
 | Physical display negotiation | Later frozen apps verify native 1440p and 4K HDMI at 119.88 Hz on the tested connection; rendering and sink observations remain separate |
 | Bounded graphics stability | Ten-minute ~59.90 FPS session and five native launch/exit cycles; not exhaustive recovery or memory validation |
 | General compute | Storage-buffer reads/writes, floating-point reductions, quantized projections, synchronization, and large dispatches proven |
@@ -52,6 +53,8 @@ See [evidence identities and limits](docs/evidence.md#graphics-evidence-identiti
 | Deterministic compute | GPU buffers, FP32 reductions, and quantized matrix projections match CPU reference results |
 | Submission granularity | Combining dependent model phases into one ordered GPU command sequence removed most tiny-submit overhead |
 | Graphics scheduling | Bounded batching, clear ordering and scoped cache maintenance substantially improve measured rendering without relaxing completion checks |
+| Game-derived scheduling | Presentation overlap and separate command-allocation retirement addressed observed 60 FPS stalls; low FPS alone does not establish a GPU processing limit |
+| Resolution-dependent slow paths | A GPU depth-clear size threshold excluded 1440p; testing all supported sizes exposed a performance cliff hidden by 4K-only testing |
 | Display-path limits | The same 4K app changed from 1080p120 to 4K120 after using a capable TV input; rendering dimensions and refresh-only overlays are not HDMI-resolution proof |
 | Storage-path cost | A matched 1080p offscreen case improved from 14.10 to 19.98 FPS through CPU copy optimization; fast presentation is not proof of fast render-to-texture |
 | Allocation lifetime | A game-derived candidate keeps persistent textures from displacing transient buffers; arena pressure is not equivalent to total GPU-memory exhaustion |
@@ -60,6 +63,12 @@ See [evidence identities and limits](docs/evidence.md#graphics-evidence-identiti
 | Model correctness | Multiple model profiles reproduced reference token sequences; larger models also generated coherent multi-turn responses |
 | Practical 7B result | A controlled 64-token Mistral run completed in 1.919 seconds, about 34.3 decode tokens/s after preparation |
 | Practical 9B result | A Qwen3.5 9B-class hybrid model generated coherent output and switched to/from the 7B model in one process |
+
+The [Yamagi case study](docs/benchmarks.md#real-application-corroboration-yamagi)
+links the public game release, sources and validation receipts. Its
+[proposed benchmark matrix](docs/benchmarks.md#proposed-game-derived-benchmark-matrix)
+turns the observed bottlenecks into follow-up experiments for
+[PS5 OpenGL](https://github.com/blackbearreloaded/ps5-opengl).
 
 ## Proven data paths
 
@@ -184,8 +193,8 @@ See [Evidence and limits](docs/evidence.md).
   throughput.
 - Offscreen CPU layout copies remain a bottleneck. Ten-minute sessions and
   bounded recreation do not establish multi-hour, GPU-memory, suspend/resume or
-  device-loss stability. Game-derived allocator/cache changes remain separate
-  from the canonical graphics SDK at the reviewed source snapshot.
+  device-loss stability. The later game results qualify their frozen game SDK
+  and workloads; they do not qualify every revision of the canonical graphics SDK.
 - Most current claims are firmware-6.02 claims. Selected earlier graphics
   primitives were also exercised elsewhere, but full-stack firmware parity is
   not claimed.

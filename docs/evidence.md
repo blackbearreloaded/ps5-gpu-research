@@ -49,7 +49,9 @@ Raw captures and proprietary material remain outside this repository.
 | 128-cube graphics throughput | Controlled | ~59.94 FPS ordinary and instanced at 1080p; small texture working set |
 | Offscreen-copy improvement | Controlled plus host-checked | Matched 1080p case 14.10 to 19.98 FPS, with pixels/completion/teardown and scalar-equivalence checks |
 | Bounded graphics stability | Controlled plus instrumented normal session | Ten-minute session and five native launch/exit cycles; CPU-owned heap only |
-| Yamagi gameplay | Owner-observed plus sampled timing | Separate runtime derivative; reported 60 FPS includes scene, sampling and texture-quality limits |
+| Yamagi 4K gameplay | Owner-observed | Later optimized development candidate reported at 120 FPS throughout tested areas; bounded scenes and texture-quality limits |
+| Yamagi resolution switching | Controlled timing and lifecycle | Six switches across 1080p/1440p/2160p; steady 120-frame windows measured separately from restart time; no new exact pixel oracle |
+| Yamagi CI game download | Host-checked plus controlled native startup | All 77 files verified; exact CI executable's 4K menu median 119.880240 FPS over 12 windows; clean close/release; no separate manual CI gameplay run |
 | Fresh SDK distribution build | Host-checked | Clean CI compilation, 344 exports, three relocated links and archive checksums; no console qualification |
 | Quantized matrix operations match CPU references | Hardware-proven | Exact tested Q4/Q8 layouts and dimensions |
 | Complete transformer layers execute on GPU | Hardware-proven | Normalization, attention, projections, activation, residual, and logits |
@@ -82,7 +84,7 @@ performance, resource/recovery stress and validation of subsequent changes.
 
 ### Graphics evidence identities
 
-This September 8 update summarizes the separately controlled `ps5-opengl` source
+The historical September 8 record summarizes the separately controlled `ps5-opengl` source
 snapshot `bd1c77fdd1cbef65092525444dabc53196ea9746` and the reviewed `ps5-yamagi`
 handoff at `b711c4f90c4e5ec183af5aa31db8589586f0d69a`. References below are project
 and document identifiers, not private repository links or personal paths. Raw
@@ -94,7 +96,7 @@ receipts and full artifact inventories remain with their respective projects.
 | Graphics performance progression | G5d `610e6a3`, G6 `ec9ac2c`, G7 `cef6c1b`; `ps5-opengl` document `docs/performance.md` | Separately frozen high-refresh, close-path and 3D candidates; not one combined full-matrix result |
 | Optimized sampled SDK | G7 runtime `cef6c1b`; `ps5-opengl` document `docs/sdk-bundle.md` | 204/204 selected executions and independent consumer checks; preserves its own bytes |
 | Offscreen and sustained session | G9 `891dab7`, G10 instrumentation `725f6eb`; `ps5-opengl` document `docs/offscreen-stability.md` | Matched offscreen comparison, 600-second session, five launches/15 EGL sessions |
-| Game-derived findings | Reviewed `ps5-yamagi` document `docs/performance-handoff.md`; private G7 derivative | Allocation policy, scoped texture maintenance and bounded gameplay observations; not merged SDK acceptance |
+| Initial game-derived findings | Reviewed `ps5-yamagi` document `docs/performance-handoff.md`; then-private G7 derivative | Allocation policy, scoped texture maintenance and bounded 1080p gameplay observations; not merged SDK acceptance |
 | Clean CI-built SDK | Source snapshot `bd1c77f`; `ps5-opengl` document `docs/ci-releases.md` and CI run `34183840335` | Build/link/package verification only; these binaries were not run on the console |
 
 Later display follow-up: `ps5-opengl` source companion `b28f96c` records G37–G40
@@ -121,6 +123,41 @@ not describe this runner as untouched upstream CTS or imply formal certification
 The game case and all graphics hardware records above are scoped to the recorded
 firmware-6.02 console. Reusing a concept across graphics and compute does not
 transfer either project's correctness or performance acceptance to the other.
+
+### Yamagi 120 Hz release identities
+
+The September 11–12 follow-up is published in
+[Yamagi Quake II v0.2.0-alpha.1](https://github.com/blackbearreloaded/ps5-yamagi-quake2/releases/tag/v0.2.0-alpha.1).
+Its [validation receipt](https://github.com/blackbearreloaded/ps5-yamagi-quake2/releases/download/v0.2.0-alpha.1/validation.json)
+separates the automated development run from the exact CI-download startup check.
+The [release sources and build description](https://github.com/blackbearreloaded/ps5-yamagi-quake2/blob/65b2a33333cd23d561ffea84750cfbe55783a619/docs/building.md)
+identify the compiler, matching shader-compiler headers, runtime configuration
+and included patch series. No implementation binaries or raw captures are copied here.
+
+| Record | Identity |
+| --- | --- |
+| Published game source and CI checkout | `65b2a33333cd23d561ffea84750cfbe55783a619` |
+| Public OpenGL base, before game-specific runtime patches | `32ca4d4e16c0f29d75b4ae82b74c2df6e1e067bf` |
+| Frozen game SDK manifest SHA-256 | `e73d2a40c5c67bd15c6cf1805c2ec4890286e311811d0546f0656a36e267fa99` |
+| Frozen game runtime archive SHA-256 | `f4641d706911fc5b72aa780efca52744bedf9173c6592a17815417abc90eeccf` |
+| CI game archive SHA-256 | `4fa5da07498fe64ffc67229eed2347e0ddffd5073f1fea248ba5e69307229a70` |
+| CI executable SHA-256 | `6979f94073122a1170b3eab8208a6cdbae5f0be511b9d4cb6efd0bc4083dcd9f` |
+| Automated mode-cycle development source | `99678e05aad3fbd79f97b1afe8f9ea9e1549ff5e` |
+| Automated mode-cycle executable SHA-256 | `3e6554d7942849de9fc49e765c5a36bfdcbd7bd430337bf7d36cde6ee714d457` |
+
+[Actions run 34666849359](https://github.com/blackbearreloaded/ps5-yamagi-quake2/actions/runs/34666849359)
+built the game independently using the frozen prebuilt SDK; it was not an
+independent runtime-library rebuild. The downloaded game's native startup test
+therefore qualifies those exact game bytes for that bounded scenario. It does
+not transfer the development candidate's manual gameplay observations to the
+CI executable, or qualify a rebuilt library merely because its source matches.
+
+The [benchmark record](benchmarks.md#public-120-hz-follow-up) reports each
+observation's workload and timing boundary. Six successful resolution changes
+do not establish recovery under device loss, memory exhaustion or suspend/resume.
+The current game SDK has focused checks and bounded evidence on one firmware-6.02
+console; it does not inherit the historical full CTS campaign. The proposed
+benchmark matrix remains pending and adds no completed hardware cases.
 
 ## Compute evidence summary
 
@@ -192,8 +229,10 @@ not console-validated. No binaries or raw CI/console logs are copied here.
    candidate identities; retain the historical complete matrix as a separate record.
 2. Reduce offscreen layout-copy costs and test heavier scenes without assuming
    that windowed presentation throughput transfers to sampleable targets.
-3. Review and integrate game-derived allocation/cache candidates separately;
-   extend normal sessions, GPU-memory accounting and recovery testing.
+3. Review reusable game-runtime changes in PS5 OpenGL with affected correctness
+   tests and the [proposed game-derived benchmark matrix](benchmarks.md#proposed-game-derived-benchmark-matrix).
+   Compare individual changes before combined acceptance; extend normal sessions,
+   GPU-memory accounting and recovery testing separately.
 4. Expand compute correctness to additional model architectures without
    weakening exact reference checks.
 5. Add multi-process or concurrent-queue tests only with an explicit safety

@@ -131,8 +131,9 @@ existing direct-allocation path preserved arena space for transient work without
 increasing the pool size. This was allocator-policy pressure, not a demonstrated
 exhaustion of the console's total GPU-visible memory.
 
-This is evidence from a game-specific graphics-runtime derivative, not a merged
-canonical SDK change or a general allocation-failure qualification. Stable mappings,
+The initial observation came from a game-specific graphics-runtime derivative.
+The later public game SDK has its own [source and evidence identities](evidence.md#yamagi-120-hz-release-identities);
+neither observation is a general allocation-failure qualification. Stable mappings,
 bounds checks, fallback allocation and retirement ownership remain necessary.
 The transferable lesson is to distinguish resource residency, lifetime and
 allocation frequency before treating a larger pool as the solution.
@@ -202,12 +203,35 @@ The measured cache optimizations rely on ownership, not on disabling synchroniza
 The game-derived texture optimization applies the same principle to eligible
 read-only linear fragment textures and lightmaps, within retained, unsubmitted
 work. It does not establish cross-frame cache reuse, tiled-texture reuse or a
-generic compute optimization. Its integration into the canonical SDK still needs
+generic compute optimization. Reuse in another runtime revision requires the
 affected resource-update and lifetime regressions.
 
 CPU-wall profiling includes waits and is not an isolated GPU timestamp. Removing
 per-draw success logging also produced a measured gain; diagnostic overhead must
 be separated from hardware throughput. See [controlled graphics benchmarks](benchmarks.md#graphics-benchmarks).
+
+### Presentation overlap and distinct resource lifetimes
+
+The later Yamagi runtime overlaps CPU preparation of the next frame with
+pending presentation. It still confirms presentation completion before GPU
+work reuses a display buffer, and before incompatible CPU access or teardown.
+This is a scoped scheduling change, not evidence of arbitrary concurrent GPU
+queues or shared contexts.
+
+Draw resources and command storage have different last-use boundaries. The
+game-specific path confirms every original draw's completion before releasing
+its resources. The final command allocation can remain owned until a separate
+terminal completion is observed; it cannot return to the command pool or be
+freed before that confirmation. Failed or unknown completion retains ownership.
+These are source-derived lifetime rules in the published runtime, corroborated
+by bounded game execution and focused checks, not a complete memory-race proof.
+
+The optimized game's observed 60 FPS plateaus disappeared after scheduling,
+batching, cache and diagnostic changes accumulated. The final result does not
+assign the entire gain to one patch. The transferable diagnostic is to measure
+CPU preparation, completion waits and presentation separately before attributing
+a quiet scene's low FPS to GPU capacity. A CPU wall-clock interval that includes
+a wait is not an isolated GPU execution measurement.
 
 ## Graphics path
 
@@ -232,6 +256,21 @@ Video decode remains a separate subsystem. Decoded caller-owned surfaces can
 enter this graphics path as sampled textures, but shader execution does not
 perform the codec decode itself.
 
+### Fast-path thresholds across render sizes
+
+The Yamagi integration exposed a GPU depth-clear eligibility threshold above
+four million pixels. A full 1440p depth clear fell below that threshold and
+used the CPU path, while 4K used the GPU path. Extending the existing eligibility
+rule to cover all three supported game sizes removed this particular fallback
+from 1080p and 1440p. Clear masks, scissor, format, target and state checks still
+apply; this does not make every clear eligible for the same path.
+
+An earlier game change also avoided clearing both an offscreen target and the
+default target when only the active target needed it. These findings motivate
+tests at size thresholds and across target usage, rather than assuming that a
+smaller image must follow the same implementation and run faster. They do not
+establish fast sampleable-offscreen rendering in general.
+
 ### Full-port teardown and bounded stability
 
 Presentation buffers may still be owned by scanout after rendering has retired.
@@ -248,6 +287,18 @@ session and returned to the same post-session level across recreation checks.
 It excludes direct GPU mappings, foreign allocators and process resident memory;
 flat samples do not prove the entire driver is leak-free. See
 [stability measurements](benchmarks.md#sustained-session-and-lifecycle).
+
+The game adds a separate context-recreation lesson: a statically linked renderer
+can outlive its graphics context. Cached object names and binding state must be
+invalidated after successful graphics teardown before rebuilding resources.
+Six native resolution changes passed after this correction; that bounded result
+does not establish suspend/resume or device-loss recovery.
+
+Render-buffer size, negotiated HDMI format and measured application FPS remain
+separate state. The game's 1080p/1440p/2160p selection changes rendering and can
+leave a console-managed 4K/120 Hz signal unchanged. This complements the earlier
+HDMI-port comparison: neither a render-size setting nor a TV refresh banner alone
+establishes all three quantities.
 
 These additions summarize the September graphics record and the separately
 reviewed game handoff; their source boundaries are listed in
