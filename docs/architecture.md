@@ -153,6 +153,20 @@ builder validates:
 This model proved sufficient for graphics textures, render targets, uniform
 buffers, storage buffers, model tensors, and completion labels.
 
+### Programmable-stage resource findings
+
+The later OpenGL 4.6 work extends the same descriptor and lifetime model across
+vertex, tessellation, geometry, fragment and compute stages. Focused native
+oracles prove four-sample storage-image size queries, load/store, atomics,
+per-sample access and array addressing. Shader subgroup ballot and cross-lane
+operations also reach the compiler backend through the advertised capability.
+
+Private GLSL arrays require a narrower statement. Bounded cases are lowered to
+stable, application-owned GPU-visible buffer storage and complete with zero
+hardware-scratch metadata. This proves the lowering and its lifetime model; it
+does not prove unrestricted hardware scratch, arbitrary register spilling or a
+general scratch allocator.
+
 ## Command submission and synchronization
 
 The safe common sequence is:

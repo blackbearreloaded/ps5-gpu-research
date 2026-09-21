@@ -1,10 +1,10 @@
 # PS5 GPU Research
 
 Independent research into graphics and general-purpose GPU workloads
-on PlayStation 5. The project documents a Mesa-based OpenGL 3.3 Core implementation,
+on PlayStation 5. The project documents a Mesa-based OpenGL 4.6 Core implementation,
 a native compute path, and complete transformer inference executed on the GPU.
 
-Graphics and evidence summaries updated September 12, 2026 (UTC). Compute results
+Graphics and evidence summaries updated September 20, 2026 (UTC). Compute results
 retain their previously recorded scope. OpenGL is a validation frontend for the
 graphics findings, not a requirement for using the underlying GPU concepts.
 
@@ -22,10 +22,10 @@ the GPU.
 | Primary validated firmware | PlayStation 5 firmware 6.02 |
 | Native shader execution | Graphics and compute programs execute with deterministic CPU-visible results |
 | Shader toolchain | Open-source GLSL/SPIR-V, Mesa NIR, and AMD compiler path adapted to the target GPU |
-| OpenGL | Mesa-derived OpenGL 3.3 Core and GLSL 3.30 implementation; not certified |
-| OpenGL API surface | All 344 OpenGL 3.3 Core commands exported and statically audited |
-| OpenGL hardware coverage | Major Core 3.3 feature families have exact public-API hardware oracles |
-| OpenGL validation | Historical frozen four-configuration campaign complete; later optimized binaries have separate, narrower evidence |
+| OpenGL | Mesa-derived OpenGL 4.6 Core and GLSL 4.60 implementation; not certified |
+| OpenGL API surface | All 657 OpenGL 4.6 Core commands exported and independently linked through the installed SDK |
+| OpenGL hardware coverage | Major graphics, compute, image, synchronization and programmable-stage families have focused public-API hardware oracles |
+| OpenGL validation | 19,714-case 4.6 engineering inventory accounted; historical frozen 3.3 campaign retained separately |
 | Graphics performance | Small windowed scene at ~119.88 FPS across 1080p, 1440p and 4K; 128-cube scene at ~59.94 FPS at 1080p |
 | Real-game follow-up | Yamagi 4K gameplay at owner-reported 120 FPS in tested areas; separate three-resolution timing and exact CI-download startup checks |
 | Physical display negotiation | Later frozen apps verify native 1440p and 4K HDMI at 119.88 Hz on the tested connection; rendering and sink observations remain separate |
@@ -47,8 +47,10 @@ See [evidence identities and limits](docs/evidence.md#graphics-evidence-identiti
 | --- | --- |
 | Shared graphics/compute foundation | Both paths use the same GPU-visible memory, shader compiler, descriptors, command submission, cache management, and completion model |
 | Clean OpenGL architecture | Mesa provides API validation and state tracking; a dedicated Gallium backend translates normalized state to the native graphics interface |
-| Real Core context | Mesa derives OpenGL 3.3 Core and GLSL 3.30 without version or extension overrides |
-| Public API coverage | Buffers, textures, framebuffer objects, depth/stencil, blending, MSAA, geometry shaders, transform feedback, queries, synchronization, and instancing are hardware-proven in bounded slices |
+| Real Core context | Mesa derives OpenGL 4.6 Core and GLSL 4.60 without version or extension overrides |
+| Public API coverage | Buffers, textures, framebuffer objects, depth/stencil, blending, MSAA, geometry/tessellation shaders, transform feedback, queries, synchronization, compute, images, indirect execution and SPIR-V are proven in bounded slices |
+| Multisampled storage images | Native four-sample image load/store, atomics, arrays and per-sample access are proven across programmable stages |
+| Private-memory boundary | Bounded GLSL private arrays can lower to stable GPU-visible buffer storage; unrestricted hardware scratch and register spilling remain separate, unproven paths |
 | Shader portability | Runtime GLSL and offline SPIR-V reach target GPU machine code through open-source compiler components |
 | Deterministic compute | GPU buffers, FP32 reductions, and quantized matrix projections match CPU reference results |
 | Submission granularity | Combining dependent model phases into one ordered GPU command sequence removed most tiny-submit overhead |
@@ -102,19 +104,20 @@ Model or compute workload
 The compute runtime is purpose-built for the console GPU. It is not a ROCm,
 CUDA, or general OpenCL implementation.
 
-## OpenGL 3.3 summary
+## OpenGL 4.6 summary
 
 The current graphics stack combines:
 
 - EGL 1.4-style native fullscreen context and presentation integration;
 - Mesa's OpenGL state tracker and public API implementation;
 - a PS5 Gallium screen/context/resource backend;
-- runtime GLSL 3.30 compilation through Mesa NIR and the AMD compiler path;
+- runtime GLSL 4.60 compilation through Mesa NIR and the AMD compiler path;
 - native buffer, texture, render-target, depth/stencil, and shader resources;
 - bounded command submission, completion, and readback; and
-- a native application that runs the Khronos `KHR-GL33` package.
+- native applications that exercise the pinned OpenGL 4.6 CTS inventory and
+  focused GPU stress cases.
 
-Hardware-proven feature families include:
+Hardware-proven feature families include the earlier 3.3 foundation plus:
 
 - direct and indexed points, lines, strips, fans, and triangles;
 - base vertex, primitive restart, instancing, attribute divisors, and packed or
@@ -126,12 +129,14 @@ Hardware-proven feature families include:
   seamless cube edges;
 - framebuffer objects, multiple render targets, masks, scissor, viewport,
   depth/stencil tests, blending, dual-source blending, and 4x MSAA;
-- vertex, fragment, and geometry shaders with GLSL 3.30 linkage;
+- vertex, fragment, geometry, tessellation and compute shaders with GLSL 4.60 linkage;
 - uniform buffers, transform feedback, occlusion/conditional queries, timers,
-  and synchronization; and
+  shader-storage buffers, storage images, atomics, indirect execution,
+  subgroup operations, SPIR-V and synchronization; and
 - direct rendering into alternating presentation buffers.
 
-See [OpenGL 3.3 findings](docs/opengl-3.3.md).
+See the historical [OpenGL 3.3 findings](docs/opengl-3.3.md) and the current
+[PS5 OpenGL validation record](https://github.com/blackbearreloaded/ps5-opengl/blob/main/docs/gl46-development-validation.md).
 
 ## General compute and AI summary
 
@@ -186,8 +191,10 @@ See [Evidence and limits](docs/evidence.md).
   checked. Concurrent queues and shared contexts need separate validation.
 - Several compatibility paths use CPU fallback, including selected texture
   decompression, blits, and resolves.
-- OpenGL compatibility-profile fixed-function behavior is outside the current
-  Core 3.3 target.
+- The OpenGL 4.6 inventory is engineering evidence, not Khronos certification;
+  reviewed `NotSupported` results are not passes.
+- Bounded private-array lowering does not establish general hardware scratch,
+  register-spill support or arbitrary private-memory capacity.
 - Compute kernels are model-specific rather than a general ML compiler.
 - Performance figures describe exact controlled workloads, not universal GPU
   throughput.

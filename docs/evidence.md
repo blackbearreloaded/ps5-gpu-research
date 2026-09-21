@@ -37,10 +37,13 @@ Raw captures and proprietary material remain outside this repository.
 | Target GPU executes independently compiled graphics shaders | Hardware-proven | Vertex, fragment, and geometry stages with exact pixel oracles |
 | Target GPU executes independently compiled compute shaders | Hardware-proven | Buffer writes, reads, reductions, and large dispatches |
 | Graphics and compute share compiler/memory/submission concepts | Hardware-proven architecture | Reused compiler backend, resource model, visibility, and completion principles |
-| Mesa can derive OpenGL 3.3 Core and GLSL 3.30 | Hardware-proven | Current candidate and implemented Gallium caps/formats |
-| OpenGL 3.3 public command surface exists | Static and build-proven | All 344 Core commands link through the consumer SDK |
-| Major Core 3.3 feature families operate | Hardware-proven slices | Exact public-API tests listed in the OpenGL document |
+| Mesa can derive OpenGL 4.6 Core and GLSL 4.60 | Hardware-proven | Native compatibility/application gate plus implemented Gallium caps and formats |
+| OpenGL 4.6 public command surface exists | Static and build-proven | All 657 Core commands link through Make, pkg-config and CMake consumers |
+| Major Core 4.6 feature families operate | Hardware-proven slices | Exact public-API and stress tests in the OpenGL validation record |
+| Native four-sample storage images operate across programmable stages | Hardware-proven slices | Size, load/store, atomics, arrays, per-sample access and `imageSamples`; advertised maximum is four samples |
+| Bounded private arrays use explicit GPU-visible storage | Hardware-proven slices | Scalar/vector widths through 64-bit and arrays through the recorded bounds; final hardware-scratch metadata is zero |
 | Historical frozen Core 3.3 project campaign | Controlled | 37,404 Pass plus 2,140 reviewed NotSupported across four configurations; six disclosed CTS adaptations |
+| OpenGL 4.6 engineering inventory | Controlled aggregate | 15,233 Pass, 4,480 reviewed NotSupported and one legal compatibility warning across 19,714 accounted cases; not certification |
 | Khronos certification | Not claimed | Project acceptance is not certification |
 | Later optimized SDK compatibility | Controlled sample | G7 SDK passes 204 selected executions; later binaries require their own scoped evidence |
 | Small-scene graphics throughput | Controlled | 30-second windowed runs at ~119.88 FPS at 1080p–4K; not a general game or perfect-pacing result |
@@ -52,7 +55,7 @@ Raw captures and proprietary material remain outside this repository.
 | Yamagi 4K gameplay | Owner-observed | Later optimized development candidate reported at 120 FPS throughout tested areas; bounded scenes and texture-quality limits |
 | Yamagi resolution switching | Controlled timing and lifecycle | Six switches across 1080p/1440p/2160p; steady 120-frame windows measured separately from restart time; no new exact pixel oracle |
 | Yamagi CI game download | Host-checked plus controlled native startup | All 77 files verified; exact CI executable's 4K menu median 119.880240 FPS over 12 windows; clean close/release; no separate manual CI gameplay run |
-| Fresh SDK distribution build | Host-checked | Clean CI compilation, 344 exports, three relocated links and archive checksums; no console qualification |
+| Fresh SDK distribution build | Host-checked | Clean CI compilation, 657 exports, three relocated links and archive checksums; no console qualification |
 | Quantized matrix operations match CPU references | Hardware-proven | Exact tested Q4/Q8 layouts and dimensions |
 | Complete transformer layers execute on GPU | Hardware-proven | Normalization, attention, projections, activation, residual, and logits |
 | Complete autoregressive models execute on GPU | Hardware-proven | Listed 135M through 9B-class profiles |
@@ -67,20 +70,22 @@ The OpenGL result is supported by:
 
 - a clean Mesa/Gallium architecture;
 - normal Mesa version derivation;
-- all required Core command symbols in the SDK;
+- all 657 OpenGL 4.6 Core command symbols in the SDK;
 - exact buffer, texture, shader, draw, framebuffer, multisample, query,
   transform-feedback, and synchronization oracles;
 - direct presentation with changing frame hashes;
-- a completed frozen four-configuration campaign with individually reviewed exclusions;
+- a completed historical 3.3 campaign and a separately accounted 4.6 engineering inventory;
 - later optimized-candidate samples kept separate from that baseline;
 - installed-SDK ImGui, NanoVG and Sokol checks;
 - preserved functional failures that led to general fixes; and
 - clean bounded lifecycle receipts.
 
-The historical full campaign is complete within its declared scope. Its
-39,544 accounted results are not 39,544 passes and do not qualify every later
-compiler, runtime or application. The remaining work includes broader workload
-performance, resource/recovery stress and validation of subsequent changes.
+The historical 3.3 campaign is complete within its declared scope. Its 39,544
+accounted results are not 39,544 passes and do not qualify every later compiler,
+runtime or application. Likewise, the 4.6 inventory is not formal conformance:
+reviewed `NotSupported` results remain distinct from passes. The remaining work
+includes broader workload performance, resource/recovery stress and validation
+of subsequent changes.
 
 ### Graphics evidence identities
 
