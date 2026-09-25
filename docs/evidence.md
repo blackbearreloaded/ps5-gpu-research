@@ -253,3 +253,25 @@ This repository preserves conclusions, not proprietary implementation.
 Anything that would disclose system binaries, copied code, non-public SDK
 material, offsets, raw command captures, credentials, signing material, or
 access-control instructions is excluded. See [`PUBLICATION.md`](../PUBLICATION.md).
+
+## Full-slice depth and stencil copies
+
+September 25 follow-up. **Grade: controlled on firmware 6.02, with host-checked
+layout and rejection cases.** The native workload copies full matching
+1920x1080 depth/stencil slices, then uses the results in subsequent rendering.
+The depth and stencil checks each matched 4,096 expected pixels, with successful
+cleanup. This is a correctness result, not a throughput benchmark.
+
+Bulk plane copies are admitted only for the qualified matching layout: full
+positive extents, matching dimensions and plane spans, compatible storage,
+matching layer index, and no effective clipping or staging conversion. Other
+cases retain the existing path. Equal dimensions alone do not establish that
+two tiled slices are byte-compatible.
+
+The [host oracle](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_depth_blit_layers.py) checks complete buffers
+and guards with independent layout expectations; removing the layer restriction
+is caught by its mutation check. The
+[native oracle](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/egl_public_core33_depth_stencil_blit.c) checks the
+copy indirectly through rendered output. An application follow-up showed no
+measured benefit in a scene using small/scaled copies rather than this full-slice
+path. Neither arbitrary cross-layer copying nor a general FPS gain is claimed.
