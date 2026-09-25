@@ -360,3 +360,23 @@ new architecture or tensor geometry can require new scheduling and kernels.
 - Peak theoretical GPU throughput.
 - Cross-firmware equivalence beyond tested cases.
 - Formal OpenGL conformance.
+
+## Ordered parallel native preparation
+
+September 25 follow-up. **Grade: source-derived architecture and host-checked
+concurrency; firmware 6.02 integration is a bounded application observation.**
+The workload is eligible native draw preparation, not simultaneous mutation of
+one OpenGL context by arbitrary application threads.
+
+Two CPU workers can prepare eligible native draws while the submission owner
+collects their results in original order. Inputs and outputs have explicit
+ownership; initialization, shared state, queue capacity and teardown remain
+synchronization boundaries. This demonstrates that serialized API submission
+does not require all backend CPU preparation to run on one core. It does not
+prove proportional scaling, general multi-context safety or GPU saturation.
+
+The host oracle forces reversed completion order, queue wraparound and failure
+paths while checking ordered results. The implementation and reproducible
+checks are in [native preparation](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/src/platform/ps5_agc_native_runtime.c),
+[queue tests](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_async_native_draw.py) and
+[preflight tests](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_async_preflight.py).
