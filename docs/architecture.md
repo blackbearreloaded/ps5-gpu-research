@@ -401,3 +401,21 @@ do not independently establish GPU cache visibility. See the public
 [extended blit oracle](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/egl_public_core33_gpu_blit_extended.c),
 [blit checks](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_gpu_blit.py) and
 [clear checks](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_gpu_clear_state.py).
+
+## Shader lifetime includes CPU preparation
+
+September 25 follow-up. **Grade: source-derived and host-checked.** The workload
+queues preparation that borrows shader packages, then deletes the shader.
+
+Waiting for submitted GPU work is insufficient when queued CPU work still
+reads shader storage. Deletion must also finish those readers before freeing
+the package and associated intermediate representation. The accepted path drains
+queued preparation before release. This is a lifetime requirement of this
+backend, not a statement that every backend needs a global drain.
+
+The [actual-source lifetime check](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_shader_release_lifetime.py)
+uses sanitizers to verify drain-before-free ordering. Firmware 6.02 application
+runs still exhibited a separate unresolved shutdown corruption after the fix.
+Consequently this result neither establishes its root cause nor proves arbitrary
+application teardown safe. Repeated application switching remains a separate
+qualification task.
