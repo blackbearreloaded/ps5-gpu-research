@@ -380,3 +380,24 @@ paths while checking ordered results. The implementation and reproducible
 checks are in [native preparation](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/src/platform/ps5_agc_native_runtime.c),
 [queue tests](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_async_native_draw.py) and
 [preflight tests](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_async_preflight.py).
+
+## Format and query driven CPU fallbacks
+
+September 25 follow-up. **Grade: source-derived cost mechanism, host-checked
+guards and controlled rendering checks on firmware 6.02.** Relevant workloads
+are linear RG16F color targets, multisample clears and array resolves under
+active queries.
+
+A supported operation can still select expensive CPU staging or conversion.
+Scene complexity alone therefore cannot rank its cost. Direct RG16F rendering
+and GPU clears/resolves remove particular fallback paths while retaining layout,
+format, bounds and query requirements. This is an implementation finding, not
+a newly discovered hardware feature or a universal frame-rate claim.
+
+Controlled checks use rendered pixels and query results. Host checks exercise
+admission, rejected layouts, state restoration and failure behavior; those checks
+do not independently establish GPU cache visibility. See the public
+[format oracle](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/egl_public_core33_native_color_formats.c),
+[extended blit oracle](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/egl_public_core33_gpu_blit_extended.c),
+[blit checks](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_gpu_blit.py) and
+[clear checks](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/test_gpu_clear_state.py).
