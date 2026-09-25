@@ -4,7 +4,7 @@ Independent research into graphics and general-purpose GPU workloads
 on PlayStation 5. The project documents a Mesa-based OpenGL 4.6 Core implementation,
 a native compute path, and complete transformer inference executed on the GPU.
 
-Graphics and evidence summaries updated September 20, 2026 (UTC). Compute results
+Graphics and evidence summaries updated September 25, 2026 (UTC). Compute results
 retain their previously recorded scope. OpenGL is a validation frontend for the
 graphics findings, not a requirement for using the underlying GPU concepts.
 
@@ -14,6 +14,11 @@ Video decoding uses the console's media-decoder path. The work documented here
 uses programmable GPU shaders for rendering and compute. The projects overlap
 only where a decoded surface is sampled, converted, composited, or presented by
 the GPU.
+
+The September 25 follow-up records [parallel preparation and fallback findings](docs/architecture.md#ordered-parallel-native-preparation),
+[bounded copy and heap qualification](docs/evidence.md#full-slice-depth-and-stencil-copies),
+and [profiling limits](docs/benchmarks.md#profiling-parallel-rendering-backends).
+These additions do not extend the scope of earlier performance or conformance results.
 
 ## Project status
 

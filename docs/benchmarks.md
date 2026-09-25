@@ -295,3 +295,31 @@ this research repository records the observations, hypotheses and acceptance sco
 - Do not combine the acceptance of different runtime binaries or infer that
   host-only CI checks execute graphics on a console.
 - Do not infer another firmware's performance.
+
+## Profiling parallel rendering backends
+
+September 25 follow-up. **Grade: source-derived instrumentation constraints and
+methodology informed by bounded firmware 6.02 runs.** No new controlled
+application throughput result is asserted in this section.
+
+- Separate startup compilation, first-use resource work and steady-state frames.
+  A cost observed while loading need not explain a later slow scene.
+- Use deltas over the same frame window. Inclusive draw/blit scopes may contain
+  map, copy or compilation scopes; summing overlapping timings double-counts work.
+- Measure a suspected cost before optimizing it. If it occupies fraction `p` of
+  frame time, eliminating it entirely gives an ideal bound of `1 / (1 - p)`;
+  additional synchronization or bottleneck shifts can reduce the real gain.
+- Separate CPU preparation and completion waits from validated GPU execution
+  timing. CPU wall time alone is not shader execution time.
+- Keep worker count fixed for throughput comparisons. The present backend's
+  shared diagnostic counters require one preparation worker, whereas normal
+  asynchronous builds can use two. A profiling build can locate costs but does
+  not replace an uninstrumented two-worker performance measurement.
+- Preserve compatible small gains and measure the combined candidate. Isolated
+  speedups are not additive, and a path not exercised by the scene adds no gain.
+- Menus, loading screens and gameplay are distinct workloads. A correct, fast
+  title screen does not qualify sustained gameplay or repeated game switching.
+
+See the published [worker settings and qualification limits](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/docs/native-preparation-updates.md).
+Existing graphics and compute benchmark tables retain their original artifacts
+and evidence boundaries; the later changes do not retroactively qualify them.
