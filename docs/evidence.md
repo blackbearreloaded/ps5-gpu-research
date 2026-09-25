@@ -275,3 +275,23 @@ is caught by its mutation check. The
 copy indirectly through rendered output. An application follow-up showed no
 measured benefit in a scene using small/scaled copies rather than this full-slice
 path. Neither arbitrary cross-layer copying nor a general FPS gain is claimed.
+
+## Direct-backed CPU heap qualification
+
+September 25 follow-up. **Grade: controlled on firmware 6.02.** The native
+allocator oracle used a 2 GiB direct-memory-backed region with CPU read/write
+access. It verified mixed-size allocation patterns totaling 1,102 MiB, freed
+them in mixed order, then allocated and verified a coalesced 1.5 GiB block.
+Separate serial and eight-worker stress phases checked allocation contents and
+cleanup. See the [public heap oracle](https://github.com/blackbearreloaded/ps5-opengl/blob/122aa899f9255e37d776b2a5317c86e5e9679907/tests/ps5/egl_public_heap_stress.c).
+
+The backing-region allocation and the heap allocator inside it are distinct
+layers. These CPU heap checks do not establish GPU access, GPU cache coherence,
+shader address compatibility, or performance for that region. A failed large
+mapping attempt before heap creation was not evidence of heap corruption.
+
+Worker stress used independently owned allocations; it does not establish all
+cross-thread free patterns. Passing the oracle also does not explain or dismiss
+unresolved application heap corruption. This is a bounded allocator result,
+not a new allocator, a maximum-memory measurement, or a recommendation that
+consumers reserve 2 GiB.
