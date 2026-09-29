@@ -261,8 +261,7 @@ Thanks to John Törnblom (ps5-payload-dev) for the [PS5 Payload SDK](https://git
 Repository-authored material is licensed under GPL-3.0. See [LICENSE](LICENSE)
 and [NOTICE.md](NOTICE.md).
 
-This project was developed with assistance from OpenAI Codex. Project
-maintainers reviewed and validated the resulting documentation.
+This project was developed with AI assistance from OpenAI and/or Anthropic tools.
 
 PlayStation and PS5 are trademarks of Sony Interactive Entertainment. This
 project is independent and is not affiliated with or endorsed by Sony.
