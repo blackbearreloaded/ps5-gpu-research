@@ -245,6 +245,8 @@ separately controlled development repositories.
 
 ## External projects and standards
 
+Thanks to John Törnblom (ps5-payload-dev) for the [PS5 Payload SDK](https://github.com/ps5-payload-dev/sdk), which much of the PS5 homebrew scene is built on.
+
 | Project or reference | Role |
 | --- | --- |
 | [Mesa](https://www.mesa3d.org/) | OpenGL state tracker, Gallium infrastructure, NIR, and AMD compiler components |
